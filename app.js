@@ -1,46 +1,265 @@
-const $=(s,e=document)=>e.querySelector(s), $$=(s,e=document)=>[...e.querySelectorAll(s)];
-const demos=[
-['차트 만들기','Chart.js','data','chart'],['세계 지도','Leaflet','data','map'],['데이터 표 정렬','Vanilla JS','data','table'],['범위 슬라이더','Vanilla JS','ui','range'],['모달 창','Vanilla JS','ui','modal'],['이미지 갤러리','Vanilla JS','media','gallery'],['드래그 & 드롭','SortableJS','ui','drag'],['버튼 애니메이션','GSAP','motion','animate'],['날짜 선택기','Flatpickr','form','date'],['Markdown 미리보기','Marked','text','markdown'],['코드 하이라이트','highlight.js','text','code'],['QR 코드 생성','QRCode.js','utility','qr'],['색상 선택기','Vanilla JS','form','color'],['토스트 알림','Vanilla JS','ui','toast'],['복사 버튼','Clipboard API','utility','copy'],['진행률 바','Vanilla JS','ui','progress'],['별점 평가','Vanilla JS','form','stars'],['탭 전환','Vanilla JS','ui','tabs'],['툴팁','CSS','ui','tooltip'],['페이지네이션','Vanilla JS','data','pages'],['검색 필터','Fuse.js','data','search'],['로딩 스피너','CSS','motion','spinner'],['스켈레톤 UI','CSS','ui','skeleton'],['아코디언','Vanilla JS','ui','accordion'],['실시간 시계','Day.js','utility','clock'],['랜덤 명언','Lodash','utility','quote'],['유효성 검사','Vanilla JS','form','validate'],['카운터 애니메이션','GSAP','motion','counter'],['피보나치 계산','Vanilla JS','utility','fib'],['컨페티 효과','confetti-js','motion','confetti']];
-const catNames={all:'전체',data:'데이터',ui:'UI',media:'미디어',motion:'모션',form:'폼',text:'텍스트',utility:'유틸'};
-function body(type,i){const id='d'+i;switch(type){
-case'chart':return `<canvas id="${id}" class="mini-chart"></canvas>`;
-case'map':return `<div id="${id}" class="leaf"></div>`;
-case'table':return `<table class="mini-table" id="${id}"><thead><tr><th>이름 ↕</th><th>점수 ↕</th></tr></thead><tbody><tr><td>민지</td><td>92</td></tr><tr><td>준호</td><td>78</td></tr><tr><td>서연</td><td>86</td></tr></tbody></table>`;
-case'range':return `<input id="${id}" class="range" type="range" min="0" max="100" value="45"><span class="slider-val">45<span style="font-size:12px"> / 100</span></span>`;
-case'modal':return `<button onclick="openModal()">모달 열기 <i class="fa-solid fa-arrow-up-right-from-square"></i></button>`;
-case'gallery':return `<div class="gallery">${['a','b','c'].map((x,n)=>`<img src="https://picsum.photos/seed/jslab${n}/180/160" alt="gallery" onclick="openImage(this.src)">`).join('')}</div>`;
-case'drag':return `<div id="${id}" class="drag-list"><div class="drag-item">🍋</div><div class="drag-item">🌿</div><div class="drag-item">🍓</div><div class="drag-item">🌊</div></div><small>카드를 드래그해 보세요</small>`;
-case'animate':return `<button id="${id}">Bounce!</button><div class="anim-ball">●</div>`;
-case'date':return `<input id="${id}" placeholder="날짜를 선택하세요">`;
-case'markdown':return `<textarea id="${id}">### Hello, JS Lab!\n**Markdown**을 렌더링합니다.</textarea><div class="markdown-out"></div>`;
-case'code':return `<pre><code class="language-javascript code">const greeting = 'Hello, world!';\nconsole.log(greeting);</code></pre>`;
-case'qr':return `<div id="${id}" style="display:flex;justify-content:center"></div>`;
-case'color':return `<input id="${id}" type="color" value="#5b4df7"><div class="color-result"></div>`;
-case'toast':return `<button onclick="notify('작업이 성공적으로 완료됐어요 ✦')">알림 띄우기</button>`;
-case'copy':return `<div class="copyrow"><input value="npm install awesome" readonly><button onclick="copyText(this.previousElementSibling.value)">복사</button></div>`;
-case'progress':return `<button id="${id}">진행하기</button><div class="progress" style="margin-top:20px"><i></i></div>`;
-case'stars':return `<div id="${id}" class="stars">☆ ☆ ☆ ☆ ☆</div><small>별을 클릭해 평가하세요</small>`;
-case'tabs':return `<div id="${id}"><div class="tabs"><b data-t="첫 번째">TAB 01</b><b data-t="두 번째">TAB 02</b><b data-t="세 번째">TAB 03</b></div><div class="tab-content">탭을 선택하세요.</div></div>`;
-case'tooltip':return `<span class="tooltip-target">여기에 마우스를 올려요</span><span class="tip">작은 도움말입니다!</span>`;
-case'pages':return `<div id="${id}" class="pagination">${[1,2,3,4].map(n=>`<span class="page ${n==1?'on':''}">${n}</span>`).join('')}</div><p style="text-align:center;font-size:11px">1 페이지 콘텐츠</p>`;
-case'search':return `<input id="${id}" placeholder="예: chart, map, UI"><p style="font-size:11px">검색어를 입력해 보세요</p>`;
-case'spinner':return `<div class="spinner"></div>`;
-case'skeleton':return `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
-case'accordion':return `<dl id="${id}" class="accordion"><dt>첫 번째 질문 +</dt><dd>접었다 펼칠 수 있는 내용입니다.</dd><dt>두 번째 질문 +</dt><dd>가볍고 깔끔한 아코디언입니다.</dd></dl>`;
-case'clock':return `<div id="${id}" class="clock">--:--:--</div>`;
-case'quote':return `<div id="${id}" class="quote">버튼을 눌러 영감을 받아보세요.</div><button>새 명언</button>`;
-case'validate':return `<input id="${id}" placeholder="이메일을 입력하세요"><button>확인</button><small></small>`;
-case'counter':return `<button id="${id}">카운트 시작</button><b class="counter-num">0</b>`;
-case'fib':return `<input id="${id}" type="number" value="10" min="1" max="40"><button>계산</button><p></p>`;
-case'confetti':return `<canvas id="${id}" style="width:100%;height:120px"></canvas><button>축하하기</button>`;}}
-const grid=$('#grid');grid.innerHTML=demos.map(([name,lib,cat,type],i)=>`<article class="card" data-cat="${cat}" data-search="${name} ${lib} ${catNames[cat]}"><div class="card-head"><div><h3>${name}</h3><span class="lib">${lib}</span></div><span class="num">${String(i+1).padStart(2,'0')}</span></div><div class="demo">${body(type,i)}</div></article>`).join('');
-$('#filters').innerHTML=Object.entries(catNames).map(([k,v])=>`<button class="filter ${k==='all'?'active':''}" data-cat="${k}">${v}</button>`).join('');
-let active='all';function filter(){let q=$('#search').value.toLowerCase();let n=0;$$('.card').forEach(c=>{let show=(active==='all'||c.dataset.cat===active)&&c.dataset.search.toLowerCase().includes(q);c.style.display=show?'flex':'none';n+=show});$('#resultCount').textContent=`${n}개 표시`};filter();$('#search').oninput=filter;$$('.filter').forEach(b=>b.onclick=()=>{active=b.dataset.cat;$$('.filter').forEach(x=>x.classList.toggle('active',x===b));filter()});
-function init(){new Chart($('#d0'),{type:'bar',data:{labels:['월','화','수','목','금'],datasets:[{data:[12,19,10,16,22],backgroundColor:['#5b4df7','#5b4df7','#d7ff55','#5b4df7','#5b4df7'],borderRadius:5}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{display:false}},maintainAspectRatio:false}});let m=L.map('d1',{zoomControl:false,attributionControl:false}).setView([37.5665,126.978],10);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);L.marker([37.5665,126.978]).addTo(m).bindPopup('서울');
-new Sortable($('#d6'),{animation:150});$('#d7').onclick=()=>gsap.fromTo($('#d7').nextElementSibling,{y:0,scale:1},{y:-65,scale:1.6,duration:.5,yoyo:true,repeat:1});flatpickr('#d8',{dateFormat:'Y-m-d',locale:{firstDayOfWeek:1}});let md=$('#d9'),out=md.nextElementSibling;out.innerHTML=marked.parse(md.value);md.oninput=()=>out.innerHTML=marked.parse(md.value);hljs.highlightAll();new QRCode($('#d11'),{text:'https://developer.mozilla.org/ko/docs/Web/JavaScript',width:100,height:100,colorDark:'#172132',colorLight:'#f4f6f8'});let co=$('#d12');const setColor=()=>co.nextElementSibling.style.background=co.value;co.oninput=setColor;setColor();
-$('#d15').onclick=e=>{let bar=e.target.nextElementSibling.firstElementChild,w=parseInt(bar.style.width)||40;bar.style.width=Math.min(w+20,100)+'%'};$('#d16').onclick=e=>{let r=[...e.target.textContent].filter(x=>x==='☆'||x==='★').length;let ix=Math.max(0,Math.floor((event.offsetX/e.target.offsetWidth)*5)+1);e.target.textContent='★ '.repeat(ix)+'☆ '.repeat(5-ix)};$$('#d17 b').forEach(b=>b.onclick=()=>b.parentElement.querySelector('.tab-content').textContent=b.dataset.t+' 탭의 내용입니다.');$$('#d19 .page').forEach(p=>p.onclick=()=>{$$('#d19 .page').forEach(x=>x.classList.remove('on'));p.classList.add('on');p.parentElement.nextElementSibling.textContent=p.textContent+' 페이지 콘텐츠'});$('#d20').oninput=e=>e.target.nextElementSibling.textContent=e.target.value?`“${e.target.value}” 관련 데모를 찾고 있어요.`:'검색어를 입력해 보세요';$$('#d23 dt').forEach(d=>d.onclick=()=>d.classList.toggle('open'));setInterval(()=>$('#d24').textContent=dayjs().format('HH:mm:ss'),1000);$('#d25').nextElementSibling.onclick=()=>$('#d25').textContent=_.sample(['작은 진전도 진전이다.','호기심은 최고의 컴파일러다.','오늘의 실험이 내일의 도구가 된다.']);let va=$('#d26');va.nextElementSibling.onclick=()=>{let ok=/^\S+@\S+\.\S+$/.test(va.value);va.parentElement.querySelector('small').textContent=ok?'✓ 올바른 이메일입니다':'이메일 형식을 확인하세요';va.parentElement.querySelector('small').style.color=ok?'#238636':'#c33'};$('#d27').onclick=e=>gsap.to(e.target.nextElementSibling,{innerText:100,duration:1.4,snap:{innerText:1},ease:'power2.out'});let fi=$('#d28');fi.nextElementSibling.onclick=()=>{let n=+fi.value,a=0,b=1;for(let i=0;i<n;i++) [a,b]=[b,a+b];fi.parentElement.querySelector('p').textContent=`F(${n}) = ${a}`};$('#d29').nextElementSibling.onclick=()=>{let c=new ConfettiGenerator({target:'d29',max:'70',size:'1.2',animate:true,props:['circle','square','triangle'],colors:[[91,77,247],[215,255,85],[23,33,50]]});c.render();setTimeout(()=>c.clear(),2500)}}
-function notify(t){let x=$('#toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2600)}function copyText(t){navigator.clipboard?.writeText(t);notify('클립보드에 복사했습니다!')}function openModal(){let l=$('#modalLayer');l.innerHTML=`<div class="modal"><h2>안녕하세요! ✦</h2><p>이것은 어떤 페이지에서도 쓸 수 있는 재사용 가능한 모달 창입니다.</p><button onclick="closeModal()">닫기</button></div>`;l.classList.add('show')}function closeModal(){$('#modalLayer').classList.remove('show')}function openImage(src){openModal();$('.modal').innerHTML=`<img src="${src}" style="width:100%;border-radius:7px"><button style="margin-top:15px" onclick="closeModal()">닫기</button>`}init();
-// 보완 인터랙션: 값 동기화·표 정렬·시계 즉시 표시
-$('#d3').oninput=e=>e.target.nextElementSibling.innerHTML=`${e.target.value}<span style="font-size:12px"> / 100</span>`;
-$('#d2').querySelectorAll('th').forEach((h,i)=>h.onclick=()=>{let rows=[...$('#d2 tbody').rows];rows.sort((a,b)=>a.cells[i].textContent.localeCompare(b.cells[i].textContent,'ko',{numeric:true}));rows.forEach(r=>$('#d2 tbody').append(r))});
-const showClock=()=>$('#d24').textContent=dayjs().format('HH:mm:ss');showClock();setInterval(showClock,1000);
+const $ = (s, e = document) => e.querySelector(s);
+const $$ = (s, e = document) => [...e.querySelectorAll(s)];
+
+const demos = [
+  ['차트 만들기', 'Chart.js', 'data', 'chart'],
+  ['세계 지도', 'Leaflet', 'data', 'map'],
+  ['데이터 표 정렬', 'Vanilla JS', 'data', 'table'],
+  ['범위 슬라이더', 'Vanilla JS', 'ui', 'range'],
+  ['모달 창', 'Vanilla JS', 'ui', 'modal'],
+  ['이미지 갤러리', 'Vanilla JS', 'media', 'gallery'],
+  ['드래그 & 드롭', 'SortableJS', 'ui', 'drag'],
+  ['버튼 애니메이션', 'GSAP', 'motion', 'animate'],
+  ['날짜 선택기', 'Flatpickr', 'form', 'date'],
+  ['Markdown 미리보기', 'Marked', 'text', 'markdown'],
+  ['코드 하이라이트', 'highlight.js', 'text', 'code'],
+  ['QR 코드 생성', 'QRCode.js', 'utility', 'qr'],
+  ['색상 선택기', 'Vanilla JS', 'form', 'color'],
+  ['토스트 알림', 'Vanilla JS', 'ui', 'toast'],
+  ['복사 버튼', 'Clipboard API', 'utility', 'copy'],
+  ['진행률 바', 'Vanilla JS', 'ui', 'progress'],
+  ['별점 평가', 'Vanilla JS', 'form', 'stars'],
+  ['탭 전환', 'Vanilla JS', 'ui', 'tabs'],
+  ['툴팁', 'CSS', 'ui', 'tooltip'],
+  ['페이지네이션', 'Vanilla JS', 'data', 'pages'],
+  ['검색 필터', 'Fuse.js', 'data', 'search'],
+  ['로딩 스피너', 'CSS', 'motion', 'spinner'],
+  ['스켈레톤 UI', 'CSS', 'ui', 'skeleton'],
+  ['아코디언', 'Vanilla JS', 'ui', 'accordion'],
+  ['실시간 시계', 'Day.js', 'utility', 'clock'],
+  ['랜덤 명언', 'Lodash', 'utility', 'quote'],
+  ['유효성 검사', 'Vanilla JS', 'form', 'validate'],
+  ['카운터 애니메이션', 'GSAP', 'motion', 'counter'],
+  ['피보나치 계산', 'Vanilla JS', 'utility', 'fib'],
+  ['컨페티 효과', 'confetti-js', 'motion', 'confetti']
+];
+
+const catNames = { all: '전체', data: '데이터', ui: 'UI', media: '미디어', motion: '모션', form: '폼', text: '텍스트', utility: '유틸' };
+
+function body(type, i) {
+  const id = 'd' + i;
+  switch (type) {
+    case 'chart': return `<canvas id="${id}" class="mini-chart"></canvas>`;
+    case 'map': return `<div id="${id}" class="leaf"></div>`;
+    case 'table': return `<table class="mini-table" id="${id}"><thead><tr><th>이름 ↕</th><th>점수 ↕</th></tr></thead><tbody><tr><td>민지</td><td>92</td></tr><tr><td>준호</td><td>78</td></tr><tr><td>서연</td><td>86</td></tr></tbody></table>`;
+    case 'range': return `<input id="${id}" class="range" type="range" min="0" max="100" value="45"><span class="slider-val">45<span style="font-size:12px"> / 100</span></span>`;
+    case 'modal': return `<button onclick="openModal()">모달 열기 <i class="fa-solid fa-arrow-up-right-from-square"></i></button>`;
+    case 'gallery': return `<div class="gallery">${['a', 'b', 'c'].map((x, n) => `<img src="https://picsum.photos/seed/jslab${n}/180/160" alt="gallery" onclick="openImage(this.src)">`).join('')}</div>`;
+    case 'drag': return `<div id="${id}" class="drag-list"><div class="drag-item">🍋</div><div class="drag-item">🌿</div><div class="drag-item">🍓</div><div class="drag-item">🌊</div></div><small>카드를 드래그해 보세요</small>`;
+    case 'animate': return `<button id="${id}">Bounce!</button><div class="anim-ball">●</div>`;
+    case 'date': return `<input id="${id}" placeholder="날짜를 선택하세요">`;
+    case 'markdown': return `<textarea id="${id}">### Hello, JS Lab!\n**Markdown**을 렌더링합니다.</textarea><div class="markdown-out"></div>`;
+    case 'code': return `<pre><code class="language-javascript code">const greeting = 'Hello, world!';\nconsole.log(greeting);</code></pre>`;
+    case 'qr': return `<div id="${id}" style="display:flex;justify-content:center"></div>`;
+    case 'color': return `<input id="${id}" type="color" value="#5b4df7"><div class="color-result"></div>`;
+    case 'toast': return `<button onclick="notify('작업이 성공적으로 완료됐어요 ✦')">알림 띄우기</button>`;
+    case 'copy': return `<div class="copyrow"><input value="npm install awesome" readonly><button onclick="copyText(this.previousElementSibling.value)">복사</button></div>`;
+    case 'progress': return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:12px"><button id="${id}">진행하기 (+20%)</button><button id="${id}-reset" style="background:#687386">리셋</button></div><div class="progress"><i style="width:0%"></i></div><div class="progress-txt" style="font-size:11px;margin-top:6px;color:#687386;text-align:right">0%</div>`;
+    case 'stars': return `<div id="${id}" class="stars"><span data-v="1">☆</span><span data-v="2">☆</span><span data-v="3">☆</span><span data-v="4">☆</span><span data-v="5">☆</span></div><small class="stars-val">별을 클릭해 평가하세요</small>`;
+    case 'tabs': return `<div id="${id}"><div class="tabs"><b class="tab-btn active" data-t="첫 번째">TAB 01</b><b class="tab-btn" data-t="두 번째">TAB 02</b><b class="tab-btn" data-t="세 번째">TAB 03</b></div><div class="tab-content">첫 번째 탭의 내용입니다.</div></div>`;
+    case 'tooltip': return `<span class="tooltip-target">여기에 마우스를 올려요</span><span class="tip">작은 도움말입니다!</span>`;
+    case 'pages': return `<div id="${id}" class="pagination">${[1, 2, 3, 4].map(n => `<span class="page ${n == 1 ? 'on' : ''}">${n}</span>`).join('')}</div><p style="text-align:center;font-size:11px;margin-top:8px">1 페이지 콘텐츠</p>`;
+    case 'search': return `<input id="${id}" placeholder="예: chart, map, UI"><p style="font-size:11px;margin-top:8px">검색어를 입력해 보세요</p>`;
+    case 'spinner': return `<div class="spinner"></div>`;
+    case 'skeleton': return `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+    case 'accordion': return `<dl id="${id}" class="accordion"><dt>첫 번째 질문 +</dt><dd>접었다 펼칠 수 있는 내용입니다.</dd><dt>두 번째 질문 +</dt><dd>가볍고 깔끔한 아코디언입니다.</dd></dl>`;
+    case 'clock': return `<div id="${id}" class="clock">--:--:--</div>`;
+    case 'quote': return `<div id="${id}" class="quote">버튼을 눌러 영감을 받아보세요.</div><button>새 명언</button>`;
+    case 'validate': return `<input id="${id}" placeholder="이메일을 입력하세요"><button style="margin-left:4px">확인</button><small style="display:block;margin-top:6px"></small>`;
+    case 'counter': return `<button id="${id}">카운트 시작</button><b class="counter-num" style="font-size:24px;margin-left:12px">0</b>`;
+    case 'fib': return `<input id="${id}" type="number" value="10" min="1" max="40" style="width:70px"><button style="margin-left:4px">계산</button><p style="font-size:12px;margin-top:8px"></p>`;
+    case 'confetti': return `<canvas id="${id}" style="width:100%;height:100px"></canvas><button>축하하기</button>`;
+  }
+}
+
+const grid = $('#grid');
+grid.innerHTML = demos.map(([name, lib, cat, type], i) => `<article class="card" data-cat="${cat}" data-search="${name} ${lib} ${catNames[cat]}"><div class="card-head"><div><h3>${name}</h3><span class="lib">${lib}</span></div><span class="num">${String(i + 1).padStart(2, '0')}</span></div><div class="demo">${body(type, i)}</div></article>`).join('');
+
+$('#filters').innerHTML = Object.entries(catNames).map(([k, v]) => `<button class="filter ${k === 'all' ? 'active' : ''}" data-cat="${k}">${v}</button>`).join('');
+
+let active = 'all';
+function filter() {
+  let q = $('#search').value.toLowerCase();
+  let n = 0;
+  $$('.card').forEach(c => {
+    let show = (active === 'all' || c.dataset.cat === active) && c.dataset.search.toLowerCase().includes(q);
+    c.style.display = show ? 'flex' : 'none';
+    if (show) n++;
+  });
+  $('#resultCount').textContent = `${n}개 표시`;
+}
+filter();
+$('#search').oninput = filter;
+$$('.filter').forEach(b => b.onclick = () => {
+  active = b.dataset.cat;
+  $$('.filter').forEach(x => x.classList.toggle('active', x === b));
+  filter();
+});
+
+function init() {
+  // 0. Chart
+  new Chart($('#d0'), {
+    type: 'bar',
+    data: {
+      labels: ['월', '화', '수', '목', '금'],
+      datasets: [{ data: [12, 19, 10, 16, 22], backgroundColor: ['#5b4df7', '#5b4df7', '#d7ff55', '#5b4df7', '#5b4df7'], borderRadius: 5 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { display: false } }, maintainAspectRatio: false }
+  });
+
+  // 1. Map
+  let m = L.map('d1', { zoomControl: false, attributionControl: false }).setView([37.5665, 126.978], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
+  L.marker([37.5665, 126.978]).addTo(m).bindPopup('서울');
+
+  // 6. Sortable
+  new Sortable($('#d6'), { animation: 150 });
+
+  // 7. GSAP Animate
+  $('#d7').onclick = () => gsap.fromTo($('#d7').nextElementSibling, { y: 0, scale: 1 }, { y: -65, scale: 1.6, duration: .5, yoyo: true, repeat: 1 });
+
+  // 8. Flatpickr
+  flatpickr('#d8', { dateFormat: 'Y-m-d' });
+
+  // 9. Markdown
+  let md = $('#d9'), out = md.nextElementSibling;
+  out.innerHTML = marked.parse(md.value);
+  md.oninput = () => out.innerHTML = marked.parse(md.value);
+
+  // 10. Highlight
+  hljs.highlightAll();
+
+  // 11. QR Code
+  new QRCode($('#d11'), { text: 'https://developer.mozilla.org/ko/docs/Web/JavaScript', width: 100, height: 100, colorDark: '#172132', colorLight: '#f4f6f8' });
+
+  // 12. Color Picker
+  let co = $('#d12');
+  const setColor = () => co.nextElementSibling.style.background = co.value;
+  co.oninput = setColor;
+  setColor();
+
+  // 15. Progress Bar Fix
+  const progBtn = $('#d15');
+  const progResetBtn = $('#d15-reset');
+  const progBar = progBtn.parentElement.nextElementSibling.firstElementChild;
+  const progTxt = progBtn.parentElement.nextElementSibling.nextElementSibling;
+  let progVal = 0;
+  const updateProgress = (val) => {
+    progVal = val;
+    progBar.style.width = `${progVal}%`;
+    progTxt.textContent = `${progVal}%`;
+  };
+  progBtn.onclick = () => {
+    if (progVal >= 100) updateProgress(0);
+    else updateProgress(Math.min(progVal + 20, 100));
+  };
+  progResetBtn.onclick = () => updateProgress(0);
+
+  // 16. Stars Rating Fix
+  const starSpans = $$('#d16 span');
+  const starsVal = $('#d16').nextElementSibling;
+  starSpans.forEach((star, idx) => {
+    star.onclick = () => {
+      const score = idx + 1;
+      starSpans.forEach((s, i) => s.textContent = i < score ? '★' : '☆');
+      starsVal.textContent = `${score}점 (${score} / 5점을 주셨습니다)`;
+      starsVal.style.color = '#5b4df7';
+    };
+  });
+
+  // 17. Tabs Switch Fix
+  const tabBtns = $$('#d17 .tab-btn');
+  const tabContent = $('#d17 .tab-content');
+  tabBtns.forEach(b => {
+    b.onclick = () => {
+      tabBtns.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      tabContent.textContent = `${b.dataset.t} 탭의 내용입니다.`;
+    };
+  });
+
+  // 19. Pagination
+  $$('#d19 .page').forEach(p => p.onclick = () => {
+    $$('#d19 .page').forEach(x => x.classList.remove('on'));
+    p.classList.add('on');
+    p.parentElement.nextElementSibling.textContent = p.textContent + ' 페이지 콘텐츠';
+  });
+
+  // 20. Search
+  $('#d20').oninput = e => e.target.nextElementSibling.textContent = e.target.value ? `“${e.target.value}” 관련 데모를 찾고 있어요.` : '검색어를 입력해 보세요';
+
+  // 23. Accordion
+  $$('#d23 dt').forEach(d => d.onclick = () => d.classList.toggle('open'));
+
+  // 24. Clock
+  const showClock = () => $('#d24').textContent = dayjs().format('HH:mm:ss');
+  showClock();
+  setInterval(showClock, 1000);
+
+  // 25. Quote
+  $('#d25').nextElementSibling.onclick = () => $('#d25').textContent = _.sample(['작은 진전도 진전이다.', '호기심은 최고의 컴파일러다.', '오늘의 실험이 내일의 도구가 된다.']);
+
+  // 26. Validate
+  let va = $('#d26');
+  va.nextElementSibling.onclick = () => {
+    let ok = /^\S+@\S+\.\S+$/.test(va.value);
+    let sm = va.parentElement.querySelector('small');
+    sm.textContent = ok ? '✓ 올바른 이메일입니다' : '이메일 형식을 확인하세요';
+    sm.style.color = ok ? '#238636' : '#c33';
+  };
+
+  // 27. Counter GSAP
+  $('#d27').onclick = e => gsap.to(e.target.nextElementSibling, { innerText: 100, duration: 1.4, snap: { innerText: 1 }, ease: 'power2.out' });
+
+  // 28. Fibonacci
+  let fi = $('#d28');
+  fi.nextElementSibling.onclick = () => {
+    let n = +fi.value, a = 0, b = 1;
+    for (let i = 0; i < n; i++) [a, b] = [b, a + b];
+    fi.parentElement.querySelector('p').textContent = `F(${n}) = ${a}`;
+  };
+
+  // 29. Confetti
+  $('#d29').nextElementSibling.onclick = () => {
+    let c = new ConfettiGenerator({ target: 'd29', max: '70', size: '1.2', animate: true, props: ['circle', 'square', 'triangle'], colors: [[91, 77, 247], [215, 255, 85], [23, 33, 50]] });
+    c.render();
+    setTimeout(() => c.clear(), 2500);
+  };
+}
+
+function notify(t) {
+  let x = $('#toast');
+  x.textContent = t;
+  x.classList.add('show');
+  setTimeout(() => x.classList.remove('show'), 2600);
+}
+
+function copyText(t) {
+  navigator.clipboard?.writeText(t);
+  notify('클립보드에 복사했습니다!');
+}
+
+function openModal() {
+  let l = $('#modalLayer');
+  l.innerHTML = `<div class="modal"><h2>안녕하세요! ✦</h2><p>이것은 어떤 페이지에서도 쓸 수 있는 재사용 가능한 모달 창입니다.</p><button onclick="closeModal()">닫기</button></div>`;
+  l.classList.add('show');
+}
+
+function closeModal() {
+  $('#modalLayer').classList.remove('show');
+}
+
+function openImage(src) {
+  openModal();
+  $('.modal').innerHTML = `<img src="${src}" style="width:100%;border-radius:7px"><button style="margin-top:15px" onclick="closeModal()">닫기</button>`;
+}
+
+init();
+
+// 보완 인터랙션: 범위 슬라이더 & 표 정렬
+$('#d3').oninput = e => e.target.nextElementSibling.innerHTML = `${e.target.value}<span style="font-size:12px"> / 100</span>`;
+$('#d2').querySelectorAll('th').forEach((h, i) => h.onclick = () => {
+  let rows = [...$('#d2 tbody').rows];
+  rows.sort((a, b) => a.cells[i].textContent.localeCompare(b.cells[i].textContent, 'ko', { numeric: true }));
+  rows.forEach(r => $('#d2 tbody').append(r));
+});
