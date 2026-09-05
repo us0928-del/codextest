@@ -1,6 +1,46 @@
 const $ = (s, e = document) => e.querySelector(s);
 const $$ = (s, e = document) => [...e.querySelectorAll(s)];
 
+// 100% 독립 실행 가능한 전역 핸들러 (어떤 외부 라이브러리 오류가 발생해도 동작 보장)
+window.handleProgress = function(btn, step) {
+  const container = btn.closest('.demo');
+  const bar = container.querySelector('.progress i');
+  const txt = container.querySelector('.progress-txt');
+  let current = parseInt(bar.style.width) || 0;
+  if (step === 0 || current >= 100) {
+    current = 0;
+  } else {
+    current = Math.min(current + step, 100);
+  }
+  bar.style.width = current + '%';
+  if (txt) txt.textContent = current + '%';
+};
+
+window.handleStar = function(span, score) {
+  const container = span.parentElement;
+  const valTxt = container.nextElementSibling;
+  const stars = container.querySelectorAll('span');
+  stars.forEach((s, i) => {
+    s.textContent = i < score ? '★' : '☆';
+  });
+  if (valTxt) {
+    valTxt.textContent = `${score}점 (${score} / 5점을 주셨습니다)`;
+    valTxt.style.color = '#5b4df7';
+    valTxt.style.fontWeight = 'bold';
+  }
+};
+
+window.handleTab = function(btn, title) {
+  const tabsContainer = btn.parentElement;
+  const mainContainer = tabsContainer.parentElement;
+  const content = mainContainer.querySelector('.tab-content');
+  tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (content) {
+    content.textContent = `${title} 탭의 내용입니다.`;
+  }
+};
+
 const demos = [
   ['차트 만들기', 'Chart.js', 'data', 'chart'],
   ['세계 지도', 'Leaflet', 'data', 'map'],
@@ -54,9 +94,9 @@ function body(type, i) {
     case 'color': return `<input id="${id}" type="color" value="#5b4df7"><div class="color-result"></div>`;
     case 'toast': return `<button onclick="notify('작업이 성공적으로 완료됐어요 ✦')">알림 띄우기</button>`;
     case 'copy': return `<div class="copyrow"><input value="npm install awesome" readonly><button onclick="copyText(this.previousElementSibling.value)">복사</button></div>`;
-    case 'progress': return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:12px"><button id="${id}">진행하기 (+20%)</button><button id="${id}-reset" style="background:#687386">리셋</button></div><div class="progress"><i style="width:0%"></i></div><div class="progress-txt" style="font-size:11px;margin-top:6px;color:#687386;text-align:right">0%</div>`;
-    case 'stars': return `<div id="${id}" class="stars"><span data-v="1">☆</span><span data-v="2">☆</span><span data-v="3">☆</span><span data-v="4">☆</span><span data-v="5">☆</span></div><small class="stars-val">별을 클릭해 평가하세요</small>`;
-    case 'tabs': return `<div id="${id}"><div class="tabs"><b class="tab-btn active" data-t="첫 번째">TAB 01</b><b class="tab-btn" data-t="두 번째">TAB 02</b><b class="tab-btn" data-t="세 번째">TAB 03</b></div><div class="tab-content">첫 번째 탭의 내용입니다.</div></div>`;
+    case 'progress': return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:12px"><button id="${id}" onclick="handleProgress(this, 20)">진행하기 (+20%)</button><button id="${id}-reset" style="background:#687386" onclick="handleProgress(this, 0)">리셋</button></div><div class="progress"><i style="width:0%"></i></div><div class="progress-txt" style="font-size:11px;margin-top:6px;color:#687386;text-align:right">0%</div>`;
+    case 'stars': return `<div id="${id}" class="stars"><span onclick="handleStar(this, 1)">☆</span><span onclick="handleStar(this, 2)">☆</span><span onclick="handleStar(this, 3)">☆</span><span onclick="handleStar(this, 4)">☆</span><span onclick="handleStar(this, 5)">☆</span></div><small class="stars-val">별을 클릭해 평가하세요</small>`;
+    case 'tabs': return `<div id="${id}"><div class="tabs"><b class="tab-btn active" onclick="handleTab(this, '첫 번째')">TAB 01</b><b class="tab-btn" onclick="handleTab(this, '두 번째')">TAB 02</b><b class="tab-btn" onclick="handleTab(this, '세 번째')">TAB 03</b></div><div class="tab-content">첫 번째 탭의 내용입니다.</div></div>`;
     case 'tooltip': return `<span class="tooltip-target">여기에 마우스를 올려요</span><span class="tip">작은 도움말입니다!</span>`;
     case 'pages': return `<div id="${id}" class="pagination">${[1, 2, 3, 4].map(n => `<span class="page ${n == 1 ? 'on' : ''}">${n}</span>`).join('')}</div><p style="text-align:center;font-size:11px;margin-top:8px">1 페이지 콘텐츠</p>`;
     case 'search': return `<input id="${id}" placeholder="예: chart, map, UI"><p style="font-size:11px;margin-top:8px">검색어를 입력해 보세요</p>`;
@@ -72,163 +112,214 @@ function body(type, i) {
   }
 }
 
-const grid = $('#grid');
-grid.innerHTML = demos.map(([name, lib, cat, type], i) => `<article class="card" data-cat="${cat}" data-search="${name} ${lib} ${catNames[cat]}"><div class="card-head"><div><h3>${name}</h3><span class="lib">${lib}</span></div><span class="num">${String(i + 1).padStart(2, '0')}</span></div><div class="demo">${body(type, i)}</div></article>`).join('');
+function renderGrid() {
+  const grid = $('#grid');
+  if (!grid) return;
+  grid.innerHTML = demos.map(([name, lib, cat, type], i) => `<article class="card" data-cat="${cat}" data-search="${name} ${lib} ${catNames[cat]}"><div class="card-head"><div><h3>${name}</h3><span class="lib">${lib}</span></div><span class="num">${String(i + 1).padStart(2, '0')}</span></div><div class="demo">${body(type, i)}</div></article>`).join('');
 
-$('#filters').innerHTML = Object.entries(catNames).map(([k, v]) => `<button class="filter ${k === 'all' ? 'active' : ''}" data-cat="${k}">${v}</button>`).join('');
+  const filters = $('#filters');
+  if (filters) {
+    filters.innerHTML = Object.entries(catNames).map(([k, v]) => `<button class="filter ${k === 'all' ? 'active' : ''}" data-cat="${k}">${v}</button>`).join('');
+  }
+}
+
+renderGrid();
 
 let active = 'all';
 function filter() {
-  let q = $('#search').value.toLowerCase();
+  let searchInput = $('#search');
+  if (!searchInput) return;
+  let q = searchInput.value.toLowerCase();
   let n = 0;
   $$('.card').forEach(c => {
     let show = (active === 'all' || c.dataset.cat === active) && c.dataset.search.toLowerCase().includes(q);
     c.style.display = show ? 'flex' : 'none';
     if (show) n++;
   });
-  $('#resultCount').textContent = `${n}개 표시`;
+  let resCount = $('#resultCount');
+  if (resCount) resCount.textContent = `${n}개 표시`;
 }
+
 filter();
-$('#search').oninput = filter;
+
+if ($('#search')) $('#search').oninput = filter;
 $$('.filter').forEach(b => b.onclick = () => {
   active = b.dataset.cat;
   $$('.filter').forEach(x => x.classList.toggle('active', x === b));
   filter();
 });
 
+function safeInit(fn) {
+  try {
+    fn();
+  } catch (err) {
+    console.warn('Init step skipped due to exception:', err);
+  }
+}
+
 function init() {
   // 0. Chart
-  new Chart($('#d0'), {
-    type: 'bar',
-    data: {
-      labels: ['월', '화', '수', '목', '금'],
-      datasets: [{ data: [12, 19, 10, 16, 22], backgroundColor: ['#5b4df7', '#5b4df7', '#d7ff55', '#5b4df7', '#5b4df7'], borderRadius: 5 }]
-    },
-    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { display: false } }, maintainAspectRatio: false }
+  safeInit(() => {
+    if (typeof Chart !== 'undefined' && $('#d0')) {
+      new Chart($('#d0'), {
+        type: 'bar',
+        data: {
+          labels: ['월', '화', '수', '목', '금'],
+          datasets: [{ data: [12, 19, 10, 16, 22], backgroundColor: ['#5b4df7', '#5b4df7', '#d7ff55', '#5b4df7', '#5b4df7'], borderRadius: 5 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { display: false } }, maintainAspectRatio: false }
+      });
+    }
   });
 
   // 1. Map
-  let m = L.map('d1', { zoomControl: false, attributionControl: false }).setView([37.5665, 126.978], 10);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
-  L.marker([37.5665, 126.978]).addTo(m).bindPopup('서울');
-
-  // 6. Sortable
-  new Sortable($('#d6'), { animation: 150 });
-
-  // 7. GSAP Animate
-  $('#d7').onclick = () => gsap.fromTo($('#d7').nextElementSibling, { y: 0, scale: 1 }, { y: -65, scale: 1.6, duration: .5, yoyo: true, repeat: 1 });
-
-  // 8. Flatpickr
-  flatpickr('#d8', { dateFormat: 'Y-m-d' });
-
-  // 9. Markdown
-  let md = $('#d9'), out = md.nextElementSibling;
-  out.innerHTML = marked.parse(md.value);
-  md.oninput = () => out.innerHTML = marked.parse(md.value);
-
-  // 10. Highlight
-  hljs.highlightAll();
-
-  // 11. QR Code
-  new QRCode($('#d11'), { text: 'https://developer.mozilla.org/ko/docs/Web/JavaScript', width: 100, height: 100, colorDark: '#172132', colorLight: '#f4f6f8' });
-
-  // 12. Color Picker
-  let co = $('#d12');
-  const setColor = () => co.nextElementSibling.style.background = co.value;
-  co.oninput = setColor;
-  setColor();
-
-  // 15. Progress Bar Fix
-  const progBtn = $('#d15');
-  const progResetBtn = $('#d15-reset');
-  const progBar = progBtn.parentElement.nextElementSibling.firstElementChild;
-  const progTxt = progBtn.parentElement.nextElementSibling.nextElementSibling;
-  let progVal = 0;
-  const updateProgress = (val) => {
-    progVal = val;
-    progBar.style.width = `${progVal}%`;
-    progTxt.textContent = `${progVal}%`;
-  };
-  progBtn.onclick = () => {
-    if (progVal >= 100) updateProgress(0);
-    else updateProgress(Math.min(progVal + 20, 100));
-  };
-  progResetBtn.onclick = () => updateProgress(0);
-
-  // 16. Stars Rating Fix
-  const starSpans = $$('#d16 span');
-  const starsVal = $('#d16').nextElementSibling;
-  starSpans.forEach((star, idx) => {
-    star.onclick = () => {
-      const score = idx + 1;
-      starSpans.forEach((s, i) => s.textContent = i < score ? '★' : '☆');
-      starsVal.textContent = `${score}점 (${score} / 5점을 주셨습니다)`;
-      starsVal.style.color = '#5b4df7';
-    };
+  safeInit(() => {
+    if (typeof L !== 'undefined' && $('#d1')) {
+      let m = L.map('d1', { zoomControl: false, attributionControl: false }).setView([37.5665, 126.978], 10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
+      L.marker([37.5665, 126.978]).addTo(m).bindPopup('서울');
+    }
   });
 
-  // 17. Tabs Switch Fix
-  const tabBtns = $$('#d17 .tab-btn');
-  const tabContent = $('#d17 .tab-content');
-  tabBtns.forEach(b => {
-    b.onclick = () => {
-      tabBtns.forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      tabContent.textContent = `${b.dataset.t} 탭의 내용입니다.`;
-    };
+  // 6. Sortable
+  safeInit(() => {
+    if (typeof Sortable !== 'undefined' && $('#d6')) {
+      new Sortable($('#d6'), { animation: 150 });
+    }
+  });
+
+  // 7. GSAP Animate
+  safeInit(() => {
+    if (typeof gsap !== 'undefined' && $('#d7')) {
+      $('#d7').onclick = () => gsap.fromTo($('#d7').nextElementSibling, { y: 0, scale: 1 }, { y: -65, scale: 1.6, duration: .5, yoyo: true, repeat: 1 });
+    }
+  });
+
+  // 8. Flatpickr
+  safeInit(() => {
+    if (typeof flatpickr !== 'undefined' && $('#d8')) {
+      flatpickr('#d8', { dateFormat: 'Y-m-d' });
+    }
+  });
+
+  // 9. Markdown
+  safeInit(() => {
+    if (typeof marked !== 'undefined' && $('#d9')) {
+      let md = $('#d9'), out = md.nextElementSibling;
+      out.innerHTML = marked.parse(md.value);
+      md.oninput = () => out.innerHTML = marked.parse(md.value);
+    }
+  });
+
+  // 10. Highlight
+  safeInit(() => {
+    if (typeof hljs !== 'undefined') {
+      hljs.highlightAll();
+    }
+  });
+
+  // 11. QR Code
+  safeInit(() => {
+    if (typeof QRCode !== 'undefined' && $('#d11')) {
+      new QRCode($('#d11'), { text: 'https://developer.mozilla.org/ko/docs/Web/JavaScript', width: 100, height: 100, colorDark: '#172132', colorLight: '#f4f6f8' });
+    }
+  });
+
+  // 12. Color Picker
+  safeInit(() => {
+    let co = $('#d12');
+    if (co) {
+      const setColor = () => co.nextElementSibling.style.background = co.value;
+      co.oninput = setColor;
+      setColor();
+    }
   });
 
   // 19. Pagination
-  $$('#d19 .page').forEach(p => p.onclick = () => {
-    $$('#d19 .page').forEach(x => x.classList.remove('on'));
-    p.classList.add('on');
-    p.parentElement.nextElementSibling.textContent = p.textContent + ' 페이지 콘텐츠';
+  safeInit(() => {
+    $$('#d19 .page').forEach(p => p.onclick = () => {
+      $$('#d19 .page').forEach(x => x.classList.remove('on'));
+      p.classList.add('on');
+      p.parentElement.nextElementSibling.textContent = p.textContent + ' 페이지 콘텐츠';
+    });
   });
 
   // 20. Search
-  $('#d20').oninput = e => e.target.nextElementSibling.textContent = e.target.value ? `“${e.target.value}” 관련 데모를 찾고 있어요.` : '검색어를 입력해 보세요';
+  safeInit(() => {
+    let d20 = $('#d20');
+    if (d20) {
+      d20.oninput = e => e.target.nextElementSibling.textContent = e.target.value ? `“${e.target.value}” 관련 데모를 찾고 있어요.` : '검색어를 입력해 보세요';
+    }
+  });
 
   // 23. Accordion
-  $$('#d23 dt').forEach(d => d.onclick = () => d.classList.toggle('open'));
+  safeInit(() => {
+    $$('#d23 dt').forEach(d => d.onclick = () => d.classList.toggle('open'));
+  });
 
   // 24. Clock
-  const showClock = () => $('#d24').textContent = dayjs().format('HH:mm:ss');
-  showClock();
-  setInterval(showClock, 1000);
+  safeInit(() => {
+    if (typeof dayjs !== 'undefined' && $('#d24')) {
+      const showClock = () => $('#d24').textContent = dayjs().format('HH:mm:ss');
+      showClock();
+      setInterval(showClock, 1000);
+    }
+  });
 
   // 25. Quote
-  $('#d25').nextElementSibling.onclick = () => $('#d25').textContent = _.sample(['작은 진전도 진전이다.', '호기심은 최고의 컴파일러다.', '오늘의 실험이 내일의 도구가 된다.']);
+  safeInit(() => {
+    if (typeof _ !== 'undefined' && $('#d25')) {
+      $('#d25').nextElementSibling.onclick = () => $('#d25').textContent = _.sample(['작은 진전도 진전이다.', '호기심은 최고의 컴파일러다.', '오늘의 실험이 내일의 도구가 된다.']);
+    }
+  });
 
   // 26. Validate
-  let va = $('#d26');
-  va.nextElementSibling.onclick = () => {
-    let ok = /^\S+@\S+\.\S+$/.test(va.value);
-    let sm = va.parentElement.querySelector('small');
-    sm.textContent = ok ? '✓ 올바른 이메일입니다' : '이메일 형식을 확인하세요';
-    sm.style.color = ok ? '#238636' : '#c33';
-  };
+  safeInit(() => {
+    let va = $('#d26');
+    if (va) {
+      va.nextElementSibling.onclick = () => {
+        let ok = /^\S+@\S+\.\S+$/.test(va.value);
+        let sm = va.parentElement.querySelector('small');
+        sm.textContent = ok ? '✓ 올바른 이메일입니다' : '이메일 형식을 확인하세요';
+        sm.style.color = ok ? '#238636' : '#c33';
+      };
+    }
+  });
 
   // 27. Counter GSAP
-  $('#d27').onclick = e => gsap.to(e.target.nextElementSibling, { innerText: 100, duration: 1.4, snap: { innerText: 1 }, ease: 'power2.out' });
+  safeInit(() => {
+    if (typeof gsap !== 'undefined' && $('#d27')) {
+      $('#d27').onclick = e => gsap.to(e.target.nextElementSibling, { innerText: 100, duration: 1.4, snap: { innerText: 1 }, ease: 'power2.out' });
+    }
+  });
 
   // 28. Fibonacci
-  let fi = $('#d28');
-  fi.nextElementSibling.onclick = () => {
-    let n = +fi.value, a = 0, b = 1;
-    for (let i = 0; i < n; i++) [a, b] = [b, a + b];
-    fi.parentElement.querySelector('p').textContent = `F(${n}) = ${a}`;
-  };
+  safeInit(() => {
+    let fi = $('#d28');
+    if (fi) {
+      fi.nextElementSibling.onclick = () => {
+        let n = +fi.value, a = 0, b = 1;
+        for (let i = 0; i < n; i++) [a, b] = [b, a + b];
+        fi.parentElement.querySelector('p').textContent = `F(${n}) = ${a}`;
+      };
+    }
+  });
 
   // 29. Confetti
-  $('#d29').nextElementSibling.onclick = () => {
-    let c = new ConfettiGenerator({ target: 'd29', max: '70', size: '1.2', animate: true, props: ['circle', 'square', 'triangle'], colors: [[91, 77, 247], [215, 255, 85], [23, 33, 50]] });
-    c.render();
-    setTimeout(() => c.clear(), 2500);
-  };
+  safeInit(() => {
+    if (typeof ConfettiGenerator !== 'undefined' && $('#d29')) {
+      $('#d29').nextElementSibling.onclick = () => {
+        let c = new ConfettiGenerator({ target: 'd29', max: '70', size: '1.2', animate: true, props: ['circle', 'square', 'triangle'], colors: [[91, 77, 247], [215, 255, 85], [23, 33, 50]] });
+        c.render();
+        setTimeout(() => c.clear(), 2500);
+      };
+    }
+  });
 }
 
 function notify(t) {
   let x = $('#toast');
+  if (!x) return;
   x.textContent = t;
   x.classList.add('show');
   setTimeout(() => x.classList.remove('show'), 2600);
@@ -241,25 +332,41 @@ function copyText(t) {
 
 function openModal() {
   let l = $('#modalLayer');
+  if (!l) return;
   l.innerHTML = `<div class="modal"><h2>안녕하세요! ✦</h2><p>이것은 어떤 페이지에서도 쓸 수 있는 재사용 가능한 모달 창입니다.</p><button onclick="closeModal()">닫기</button></div>`;
   l.classList.add('show');
 }
 
 function closeModal() {
-  $('#modalLayer').classList.remove('show');
+  let l = $('#modalLayer');
+  if (l) l.classList.remove('show');
 }
 
 function openImage(src) {
   openModal();
-  $('.modal').innerHTML = `<img src="${src}" style="width:100%;border-radius:7px"><button style="margin-top:15px" onclick="closeModal()">닫기</button>`;
+  let m = $('.modal');
+  if (m) m.innerHTML = `<img src="${src}" style="width:100%;border-radius:7px"><button style="margin-top:15px" onclick="closeModal()">닫기</button>`;
 }
 
-init();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 
 // 보완 인터랙션: 범위 슬라이더 & 표 정렬
-$('#d3').oninput = e => e.target.nextElementSibling.innerHTML = `${e.target.value}<span style="font-size:12px"> / 100</span>`;
-$('#d2').querySelectorAll('th').forEach((h, i) => h.onclick = () => {
-  let rows = [...$('#d2 tbody').rows];
-  rows.sort((a, b) => a.cells[i].textContent.localeCompare(b.cells[i].textContent, 'ko', { numeric: true }));
-  rows.forEach(r => $('#d2 tbody').append(r));
+safeInit(() => {
+  let d3 = $('#d3');
+  if (d3) d3.oninput = e => e.target.nextElementSibling.innerHTML = `${e.target.value}<span style="font-size:12px"> / 100</span>`;
+});
+
+safeInit(() => {
+  let d2 = $('#d2');
+  if (d2) {
+    d2.querySelectorAll('th').forEach((h, i) => h.onclick = () => {
+      let rows = [...$('#d2 tbody').rows];
+      rows.sort((a, b) => a.cells[i].textContent.localeCompare(b.cells[i].textContent, 'ko', { numeric: true }));
+      rows.forEach(r => $('#d2 tbody').append(r));
+    });
+  }
 });
